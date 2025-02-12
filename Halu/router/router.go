@@ -12,6 +12,7 @@ func UserRouter(route *gin.Engine) {
 		users.GET("/", controller.GetAllUsers)
 		users.GET("/:UID", controller.GetUserID)
 		users.POST("/", controller.MoreUsers)
+		users.PUT("/:UID", controller.UpdateUser)
 		users.DELETE("/:UID", controller.DeleteUser)
 	}
 }

@@ -89,6 +89,51 @@ func MoreUsers(c *gin.Context) {
 	c.JSON(200, gin.H{"result": "Users Inserted Successfully !"})
 }
 
+func UpdateUser(c *gin.Context) {
+	// Update User
+	UID := c.Param("UID")
+
+	if UID == "" {
+		utilities.FailMess(c, 400, "User ID is Missing !")
+		return
+	}
+
+	var UpdateUserInput entities.UserEntity
+
+	bind_json_fail := c.ShouldBindJSON(&UpdateUserInput)
+
+	if bind_json_fail != nil {
+		utilities.FailMess(c, 400, "Fail to Bind JSON", bind_json_fail.Error())
+		return
+	}
+
+	database, err := config.TableSetup()
+	if err != nil {
+		log.Fatalf("Fail to Connect to Database : %v", err)
+		utilities.FailMess(c, 500, "Database Connection Fail !")
+		return
+	}
+
+	var SingleUser entities.UserEntity
+
+	GetFailUser := database.First(&SingleUser, UID).Error
+
+	if GetFailUser != nil {
+		if GetFailUser.Error() == "record not found" {
+			utilities.FailMess(c, 400, "User Unavailable !")
+		}
+		return
+	}
+
+	UpdateFail := database.Model(&SingleUser).Updates(UpdateUserInput).Error
+	if UpdateFail != nil {
+		utilities.FailMess(c, 404, "Update Fail !", UpdateFail.Error())
+		return
+	}
+
+	c.JSON(200, gin.H{"result": "Users Updated !"})
+}
+
 func DeleteUser(c *gin.Context) {
 	// Delete User
 	UID := c.Param("UID")
@@ -119,7 +164,7 @@ func DeleteUser(c *gin.Context) {
 	DeleteUserFail := database.Delete(&entities.UserEntity{}, UID).Error
 
 	if DeleteUserFail != nil {
-		utilities.FailMess(c, 500, "Error on Deleting Sample", GetFailUser.Error())
+		utilities.FailMess(c, 500, "Error on Deleting Sample")
 		return
 	}
 
